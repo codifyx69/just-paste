@@ -33,4 +33,9 @@ Werkzeug==3.0.2
 # PyMySQL==1.1.0
 
 # Optional: Redis for better rate limiting
+
 # redis==5.0.3
+
+# Add these for Railway deployment
+gunicorn[eventlet]==21.2.0
+psycopg2-binary==2.9.9
