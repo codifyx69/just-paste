@@ -881,12 +881,7 @@ def add_security_headers(response):
 # ==================== STARTUP ====================
 
 if __name__ == '__main__':
-    # Production deployment
     port = int(os.environ.get('PORT', 5000))
-    
-    # Railway production environment
-    if os.environ.get('RAILWAY_ENVIRONMENT') == 'production':
-        socketio.run(app, host='0.0.0.0', port=port, debug=False)
-    else:
-        # Local development
-        socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    print(f"🚀 Starting app on port {port}")
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
+
