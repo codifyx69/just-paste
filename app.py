@@ -881,20 +881,12 @@ def add_security_headers(response):
 # ==================== STARTUP ====================
 
 if __name__ == '__main__':
-    # Production check
-    if not os.getenv('SECRET_KEY') or len(os.getenv('SECRET_KEY')) < 32:
-        logger.error("SECRET_KEY not properly set!")
-        exit(1)
+    # Production deployment
+    port = int(os.environ.get('PORT', 5000))
     
-    if not AUTH0_DOMAIN or not AUTH0_AUDIENCE:
-        logger.error("Auth0 configuration missing!")
-        exit(1)
-    
-    # Log startup
-    logger.info("=" * 50)
-    logger.info("Just Paste Server Starting...")
-    logger.info(f"Environment: {'Production' if not app.debug else 'Development'}")
-    logger.info("=" * 50)
-    
-    # Use gunicorn in production
-    socketio.run(app, debug=False, host='0.0.0.0', port=5000)
+    # Railway production environment
+    if os.environ.get('RAILWAY_ENVIRONMENT') == 'production':
+        socketio.run(app, host='0.0.0.0', port=port, debug=False)
+    else:
+        # Local development
+        socketio.run(app, host='0.0.0.0', port=port, debug=True)
