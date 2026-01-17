@@ -1,0 +1,36 @@
+# Core Flask Dependencies
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-CORS==4.0.1
+Flask-SocketIO==5.3.6
+Flask-Limiter==3.5.0
+python-socketio==5.11.1
+eventlet==0.35.2
+
+# Media Download
+yt-dlp==2024.4.9
+
+# Authentication & Security
+PyJWT[crypto]==2.8.0
+cryptography==42.0.5
+python-dotenv==1.0.1
+requests==2.31.0
+
+# Database
+SQLAlchemy==2.0.29
+
+# Production Server
+gunicorn==21.2.0
+gevent==24.2.1
+
+# Security Extras
+Werkzeug==3.0.2
+
+# Optional: PostgreSQL Support
+# psycopg2-binary==2.9.9
+
+# Optional: MySQL Support
+# PyMySQL==1.1.0
+
+# Optional: Redis for better rate limiting
+# redis==5.0.3

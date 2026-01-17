@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Download your favorite content from YouTube, Facebook, Instagram, TikTok, and more without watermarks">
+  <meta name="theme-color" content="#0D6EFD">
+  <title>Just Paste - Advanced Social Media Downloader</title>
+  <link rel="icon" type="image/jpeg" href="assets/imgs/logo.jpg">
+  <link rel="stylesheet" href="/static/style.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <!-- Socket.IO -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+  
+  <!-- Auth0 SDK -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+</head>
+<body>
+  <!-- Three.js Background -->
+  <div id="threejs-bg"></div>
+  
+  <!-- Loading Screen -->
+  <div id="loadingScreen" class="loading-screen">
+    <div class="loader">
+      <div class="loader-circle"></div>
+      <div class="loader-text">Loading...</div>
+    </div>
+  </div>
+  
+  <!-- Header -->
+  <header>
+    <div class="header-content">
+      <div class="logo-section">
+        <h1 class="glitch" data-text="Just Paste">Just Paste</h1>
+        <p class="tagline">Download your favorite content from YouTube, Facebook, Instagram, TikTok, Snapchat & more</p>
+      </div>
+      
+      <div class="header-controls">
+        <div id="auth-controls">
+          <button id="loginBtn" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt"></i> 
+            <span>Login / Sign Up</span>
+          </button>
+          <button id="logoutBtn" class="btn btn-danger" style="display: none;">
+            <i class="fas fa-sign-out-alt"></i> 
+            <span>Logout</span>
+          </button>
+          <div id="userInfo" style="display: none;" class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="userName"></span>
+          </div>
+        </div>
+        <button id="modeToggle" class="btn btn-secondary">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main>
+    <!-- Download Section -->
+    <section class="download-section card" id="downloadSection">
+      <div class="section-header">
+        <h2><i class="fas fa-download"></i> Download Media</h2>
+        <p>Paste your URLs and select format & quality</p>
+      </div>
+      
+      <div class="input-group">
+        <div class="textarea-wrapper">
+          <textarea 
+            id="urlInput" 
+            placeholder="Paste one or more media URLs here (one per line)&#10;Example:&#10;https://youtube.com/watch?v=...&#10;https://instagram.com/p/..."
+            rows="5"
+          ></textarea>
+          <div class="url-counter">
+            <i class="fas fa-link"></i>
+            <span id="urlCount">0</span> URL(s)
+          </div>
+        </div>
+        
+        <div class="options-grid">
+          <div class="form-group">
+            <label for="formatSelect">
+              <i class="fas fa-file-video"></i> Format
+            </label>
+            <div class="custom-select">
+              <select id="formatSelect">
+                <option value="mp4">🎬 MP4 (Video)</option>
+                <option value="mp3">🎵 MP3 (Audio)</option>
+                <option value="wav">🎼 WAV (Lossless Audio)</option>
+                <option value="jpg">🖼️ JPEG (Image)</option>
+                <option value="png">🖼️ PNG (Image)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="qualitySelect">
+              <i class="fas fa-signal"></i> Quality
+            </label>
+            <div class="custom-select">
+              <select id="qualitySelect"></select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group" id="pathGroup">
+          <label for="pathInput">
+            <i class="fas fa-folder-open"></i> Custom Path (Optional)
+          </label>
+          <div class="path-input-wrapper">
+            <input type="text" id="pathInput" placeholder="Leave empty for automatic download">
+            <button id="validatePath" class="btn btn-sm btn-secondary" title="Validate Path">
+              <i class="fas fa-check-circle"></i>
+            </button>
+          </div>
+          <div id="pathStatus" class="path-status"></div>
+        </div>
+        
+        <button id="downloadBtn" class="btn btn-primary btn-lg btn-block">
+          <i class="fas fa-download"></i>
+          <span>Start Download</span>
+        </button>
+      </div>
+      
+      <!-- Active Downloads -->
+      <div id="activeDownloads" class="active-downloads"></div>
+    </section>
+    
+    <!-- History Section -->
+    <section class="history-section card" id="historySection" style="display: none;">
+      <div class="section-header">
+        <h2><i class="fas fa-history"></i> Download History</h2>
+        <p>Your recent downloads (last 30 days)</p>
+      </div>
+      
+      <div class="history-controls">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchHistory" placeholder="Search history...">
+        </div>
+        <div class="history-actions">
+          <button id="refreshHistoryBtn" class="btn btn-secondary">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button id="clearHistoryBtn" class="btn btn-danger">
+            <i class="fas fa-trash-alt"></i> Clear All
+          </button>
+        </div>
+      </div>
+      
+      <ul id="historyList"></ul>
+    </section>
+    
+    <!-- Guest Message -->
+    <div id="guestMessage" class="card guest-message" style="display: none;">
+      <i class="fas fa-info-circle"></i>
+      <h3>Login to Access History</h3>
+      <p>Sign in to save and view your download history across devices</p>
+      <button class="btn btn-primary" onclick="document.getElementById('loginBtn').click()">
+        <i class="fas fa-sign-in-alt"></i> Login Now
+      </button>
+    </div>
+    
+    <!-- Features Section -->
+    <section class="features-section card" id="featuresSection">
+      <div class="section-header">
+        <h2><i class="fas fa-star"></i> Features</h2>
+        <p>Why choose Just Paste?</p>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-ban"></i>
+          </div>
+          <h3>No Watermarks</h3>
+          <p>Download content without any watermarks or branding</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <h3>Batch Downloads</h3>
+          <p>Download multiple files simultaneously with ease</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-history"></i>
+          </div>
+          <h3>Persistent History</h3>
+          <p>Track all your downloads with automatic history saving</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-moon"></i>
+          </div>
+          <h3>Dark/Light Mode</h3>
+          <p>Switch between themes for comfortable viewing</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3>Real-Time Progress</h3>
+          <p>Monitor download progress with live updates</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <h3>Mobile Optimized</h3>
+          <p>Fully responsive design for all devices</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-ad"></i>
+          </div>
+          <h3>Ad-Free</h3>
+          <p>Clean interface without annoying advertisements</p>
+        </div>
+        
+        <div class="feature-item">
+          <div class="feature-icon">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <h3>Lightning Fast</h3>
+          <p>Optimized servers for maximum download speed</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Supported Platforms -->
+    <section class="platforms-section card">
+      <div class="section-header">
+        <h2><i class="fas fa-globe"></i> Supported Platforms</h2>
+        <p>Download from 1000+ websites</p>
+      </div>
+      
+      <div class="platforms-grid">
+        <div class="platform-badge">
+          <i class="fab fa-youtube"></i>
+          <span>YouTube</span>
+        </div>
+        <div class="platform-badge">
+          <i class="fab fa-facebook"></i>
+          <span>Facebook</span>
+        </div>
+        <div class="platform-badge">
+          <i class="fab fa-instagram"></i>
+          <span>Instagram</span>
+        </div>
+        <div class="platform-badge">
+          <i class="fab fa-tiktok"></i>
+          <span>TikTok</span>
+        </div>
+        <div class="platform-badge">
+          <i class="fab fa-twitter"></i>
+          <span>Twitter</span>
+        </div>
+        <div class="platform-badge">
+          <i class="fab fa-snapchat"></i>
+          <span>Snapchat</span>
+        </div>
+        <div class="platform-badge">
+          <i class="fab fa-vimeo"></i>
+          <span>Vimeo</span>
+        </div>
+        <div class="platform-badge">
+          <i class="fas fa-plus"></i>
+          <span>1000+ More</span>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>Just Paste Codify</h3>
+        <p>&copy; 2026 All rights reserved. v1.2</p>
+      </div>
+      
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#downloadSection">Download</a></li>
+          <li><a href="#featuresSection">Features</a></li>
+          <li><a href="mailto:support@justpaste.com">Support</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h4>Connect With Us</h4>
+        <div class="social-icons">
+          <a href="https://www.facebook.com/kartik.sheirgill/" target="_blank" class="social-icon" title="Facebook">
+            <i class="fab fa-facebook"></i>
+          </a>
+          <a href="https://www.instagram.com/codifyx_69" target="_blank" class="social-icon" title="Instagram">
+            <i class="fab fa-instagram"></i>
+          </a>
+          <a href="https://www.github.com/kartikvarodra" target="_blank" class="social-icon" title="GitHub">
+            <i class="fab fa-github"></i>
+          </a>
+          <a href="mailto:support@justpaste.com" class="social-icon" title="Email">
+            <i class="fas fa-envelope"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+  
+  <!-- Global Spinner -->
+  <div id="globalSpinner" class="global-spinner" style="display: none;">
+    <div class="spinner">
+      <div class="spinner-circle"></div>
+      <div class="spinner-text">Loading...</div>
+    </div>
+  </div>
+  
+  <script src="/static/script.js"></script>
+</body>
+</html>
